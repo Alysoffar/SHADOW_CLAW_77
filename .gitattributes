@@ -1,2 +1,236 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+import os
+import sqlite3
+
+def home():
+    print("\t\tWelcome to our Bank Management System\n")
+    print("\t\tDeveloped by Aly Soffar\n")
+    print("1-LOG İN\n"
+      "2-Create an account\n"
+      "3-Exit")
+def acc_creat():
+    os.system('cls')
+    print("Please fill the following form\n")
+    user_data={"First name":None,"Last name":None,"Father name":None,"Mother name":None,"Telephone number": None,"Address":None,"Date":None,
+               "Month":None,"Year":None,"Card number":None,"Username":None,"Password":None}
+    for key in user_data.keys():
+        user_data[key]=input(key+": ")
+    print("Values to be inserted:", tuple(user_data.values()))
+    cursor.execute("INSERT INTO customerdetails VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",tuple(user_data.values()))
+    connect.commit()
+    print("========processing data========")
+    print("Account created successfully")
+    print("press any key to login")
+    input()
+    login()
+
+
+def login():
+    os.system('cls')
+    cursor.execute("SELECT * FROM customerdetails")
+    data= cursor.fetchall()
+    print("========Log========")
+    username=input("\tUser Name: ")
+    password=input("\tPassword: ")
+    for items in data:
+        if(items[10]==username):
+            if(items[11]==password):
+                print("===================================\n")
+                print("Login successfully\n")
+                print("press any key to login")
+                input()
+                services()
+        else:
+            print("Invlid username or password\n")
+            choice=int(input("Do you want to create an account or tey again(choose 1 for create an account or 0 to try again)\n"))
+            if(choice==1):
+                acc_creat()
+                break
+            else:
+                login()
+                break
+    
+        
+
+def services():
+    os.system('cls')
+    cursor.execute("SELECT * FROM customerdetails")
+    data= cursor.fetchall()
+        # Display fetched data
+    print("\t\tSERVICES\n\n")
+    print("1-Deposit\n")
+    print("2-Check Balance\n")
+    print("3-Transfere Money\n")
+    print("4-withdraw\n")
+    print("5-Exit\n")
+    service_chosen=int(input("Please choose a service: "))
+    while True:
+        if service_chosen not in [1,2,3,4]:
+            service_chosen=int(input("Please choose a service: ")) 
+        else:
+           break
+    if service_chosen == 1:
+        deposit()
+    elif service_chosen==2:
+        checkbalance()
+    elif service_chosen == 3:
+        transfer_money()
+    elif service_chosen ==4:
+        withdraw()
+    elif service_chosen==5:
+        exit
+
+
+def deposit():
+    os.system('cls')
+    items = cursor.fetchall()
+    print(items)
+    print("\t\tDEPOSIT\n")
+    data = {"Username": None, "Amount": None}
+    for keys in data.keys():
+        data[keys] = input(keys + "\t")
+    try:
+        cursor.execute("INSERT INTO money VALUES (?, ?)", tuple(data.values()))
+        connect.commit()
+        print("Processing the data\n")
+        print("============================\n")
+        print("Deposit successfully\n")
+        print("Press any key to return to home page\n")
+        input()
+        services()
+    except sqlite3.Error as e:
+        print("An error occurred:", e)
+
+
+def withdraw():
+    os.system('cls')
+    items = cursor.fetchall()
+    print(items)
+    print("\t\tWITHDRAW\n")
+    data = {"Username": None, "Amount": None}
+    for keys in data.keys():
+        data[keys] = input(keys + "\t")
+    try:
+        cursor.execute("INSERT INTO withdraw VALUES (?, ?)", tuple(data.values()))
+        connect.commit()
+        print("Processing the data\n")
+        print("============================\n")
+        print("Withdraw successfully\n")
+        print("Press any key to return to home page\n")
+        input()
+        services()
+    except sqlite3.Error as e:
+        print("An error occurred:", e)
+ 
+def checkbalance():
+    username = input("Enter Username: ")
+    os.system('cls')
+    cursor.execute("SELECT * FROM money WHERE username=?", (username,))
+    money_deposited = cursor.fetchall()
+    print("\n\t\t\t\tBANK BALANCE\n")
+    print("Transaction Type\tMoney\t\tBalance")
+    balance = 0
+    for deposit in money_deposited:
+        balance += deposit[1]
+        print(f"Deposited\t\t{deposit[1]}\t\t{balance}")
+    
+    cursor.execute("SELECT * FROM withdraw WHERE username=?", (username,))
+    money_withdrawn = cursor.fetchall()
+    for withdraw in money_withdrawn:
+        balance -= withdraw[1]
+        print(f"Withdrawn\t\t{withdraw[1]}\t\t{balance}")
+ 
+    cursor.execute("SELECT * FROM transferemoney WHERE username_from=?", (username,))
+    money_transferred_from = cursor.fetchall()
+    for transfer_from in money_transferred_from:
+        balance -= transfer_from[2]
+        print(f"Transferred to({transfer_from[1]}){-transfer_from[2]}\t\t{balance}")
+ 
+    cursor.execute("SELECT * FROM transferemoney WHERE username_to=?", (username,))
+    money_transferred_to = cursor.fetchall()
+    for transfer_to in money_transferred_to:
+        balance += transfer_to[2]
+        print(f"Received from({transfer_to[0]})\t{transfer_to[2]}\t\t{balance}")
+ 
+    input("\nPress Enter to return to home page\n")
+    services()
+
+def transfer_money():
+    os.system('cls')
+    print("\t\tTransfer Money\n")
+
+    try:
+        # Fetch items from the transfer table
+        # Get transfer details from user input
+        username_from = input("From (Enter the username): ")
+        username_to = input("To (Enter the username): ")
+        amount = float(input("Amount transferred: "))
+        # Insert transfer data into the transfer table
+        cursor.execute("INSERT INTO transferemoney VALUES (?, ?, ?)", (username_from, username_to, amount))
+        connect.commit()
+
+        print("\nProcessing the data...")
+        print("============================")
+        print("Transfer successful\n")
+
+        input("Press any key to return to home page\n")
+        services()
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        input("Press any key to return to home page\n")
+        services()
+home()
+account_prompt = int(input("Please enter your service (1, 2, or 3): "))
+
+connect=sqlite3.connect("customerdata.db")
+cursor=connect.cursor()
+#cursor.execute("""CREATE TABLE customerdetails(
+              # f_name text,
+               #l_name text,
+               #fathername text,
+               #mothername text,
+               #telephone text,
+               #address text,
+               #date integer,
+               #month integere,
+               #year integer,
+               #cardno integer,
+               #username text,
+               #password text
+#)
+#""")
+
+#cursor.execute("""CREATE TABLE money(
+  #             username text,
+ #              money integer
+#)
+#""")
+
+#cursor.execute("""CREATE TABLE withdraw(
+  #            username text,
+ #              money integer
+#)
+#""")
+
+#cursor.execute("""CREATE TABLE transferemoney(
+   #          username_from text,
+  #             username_to text,
+ #                money integer
+#)
+#""")
+while True:
+    if account_prompt not in [1, 2, 3]:
+        print("Wrong input")
+        account_prompt = int(input("Please enter a valid input: "))
+    else:
+        break
+
+if account_prompt==1:
+    login()
+elif account_prompt==2:
+    acc_creat()
+elif account_prompt==3:
+    exit
+
+connect.commit()
+connect.close()
