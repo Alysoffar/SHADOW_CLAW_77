@@ -39,15 +39,14 @@ def login():
                 print("press any key to login")
                 input()
                 services()
-        else:
+    if (username not in data ):
+        if (password not in data):
             print("Invlid username or password\n")
             choice=int(input("Do you want to create an account or tey again(choose 1 for create an account or 0 to try again)\n"))
             if(choice==1):
                 acc_creat()
-                break
             else:
                 login()
-                break
     
         
 
