@@ -1,6 +1,6 @@
 import os
 import sqlite3
-
+#An AI chat bot will be added soon 
 def home():
     print("\t\tWelcome to our Bank Management System\n")
     print("\t\tDeveloped by Aly Soffar\n")
